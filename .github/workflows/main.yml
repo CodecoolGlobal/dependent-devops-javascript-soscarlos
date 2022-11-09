@@ -7,6 +7,7 @@ on:
     branches: [development]
 
 jobs:
+
   build_test:
     name: Build and Test App
     runs-on: ubuntu-latest
@@ -32,11 +33,11 @@ jobs:
         
         - name: Test Report
           uses: dorny/test-reporter@v1
-          if: success() || failure()    # run this step even if previous step failed
+          if: success() || failure()
           with:
-            name: JEST Tests            # Name of the check run which will be created
-            path: reports/jest-*.xml    # Path to test results
-            reporter: jest-junit        # Format of test results
+            name: JEST Tests
+            path: reports/jest-*.xml
+            reporter: jest-junit
             fail-on-error: 'true'
 
   push_to_DockerHub:
@@ -76,3 +77,19 @@ jobs:
             echo "Running the docker image"
             echo "Testing the nodejs  app endpoints"
             echo ${{ steps.docker_build.outputs.digest }}
+
+  deploy_to_Heroku:
+    name: Deploy to Heroku
+    runs-on: ubuntu-latest
+    needs: [push_to_DockerHub]
+    
+    steps:
+      - name: checkout repo
+        uses: actions/checkout@v2
+      - name: deploy to Heroku
+        uses: akhileshns/heroku-deploy@v3.12.12
+        with:
+          heroku_api_key: ${{ secrets.HEROKU_API_KEY }}
+          heroku_app_name: ${{ secrets.HEROKU_APP_NAME }}
+          heroku_email: ${{ secrets.HEROKU_EMAIL }}
+          usedocker: true
